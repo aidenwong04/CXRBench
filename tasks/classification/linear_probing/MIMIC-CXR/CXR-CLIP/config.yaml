@@ -2,11 +2,11 @@
 # Linear probing config for CXR-CLIP ResNet50-M on MIMIC-CXR (multi-label).
 
 model:
-  checkpoint_path: /restricted/projectnb/batmanlab/ahcmwong/checkpoints/ResNet50-M/data.pkl
+  checkpoint_path: /restricted/projectnb/batmanlab/ahcmwong/checkpoints/ResNet50-M/resnet50m_state.pt
   encoder: resnet50
   freeze_encoder: true
   image_size: 224
-  mean: [0.485, 0.456, 0.406]        # update to CXR-CLIP stats if they differ
+  mean: [0.485, 0.456, 0.406] # update to CXR-CLIP stats if they differ
   std: [0.229, 0.224, 0.225]
   classifier_dropout: 0.0
 
@@ -17,11 +17,27 @@ data:
     val: /restricted/projectnb/batmanlab/shared/Data/chestXRayDatasets/MIMICCXR/valid.csv
     test: /restricted/projectnb/batmanlab/shared/Data/chestXRayDatasets/MIMICCXR/valid.csv
 
-  image_root: /restricted/projectnb/batmanlab/shared/Data/chestXRayDatasets/MIMICCXR/MIMIC-CXR-JPG  # base dir for images
-  path_column: path                   # column with relative paths
-  label_columns: ["No Finding", "Enlarged Cardiomediastinum", "Cardiomegaly", "Airspace Opacity", "Lung Lesion", "Edema", "Consolidation", "Pneumonia", "Atelectasis", "Pneumothorax", "Pleural Effusion", "Pleural Other", "Fracture", "Support Devices"]
-  split_column: null                  # not needed with per-split CSVs
-  uncertain_policy: zero              # map -1 -> 0
+  image_root: /restricted/projectnb/batmanlab/shared/Data/chestXRayDatasets/MIMICCXR/MIMIC-CXR-JPG # base dir for images
+  path_column: path # column with relative paths
+  label_columns:
+    [
+      "No Finding",
+      "Enlarged Cardiomediastinum",
+      "Cardiomegaly",
+      "Airspace Opacity",
+      "Lung Lesion",
+      "Edema",
+      "Consolidation",
+      "Pneumonia",
+      "Atelectasis",
+      "Pneumothorax",
+      "Pleural Effusion",
+      "Pleural Other",
+      "Fracture",
+      "Support Devices",
+    ]
+  split_column: null # not needed with per-split CSVs
+  uncertain_policy: zero # map -1 -> 0
   num_workers: 8
 
 training:
@@ -35,5 +51,5 @@ training:
 logging:
   output_dir: /restricted/projectnb/batmanlab/ahcmwong/outputs/classification/linear_probe/cxr_clip/ResNet50-M/
   log_every: 50
-  eval_every: 1          # evaluate every N epochs
+  eval_every: 1 # evaluate every N epochs
   save_ckpt: true

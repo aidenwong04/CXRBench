@@ -1,0 +1,19 @@
+#!/bin/bash
+#$ -P batmanlab
+#$ -cwd
+#$ -j y
+#$ -N cxrclip_lp
+#$ -l h_rt=24:00:00
+#$ -l mem_free=24G
+#$ -l gpus=1
+#$ -o /restricted/projectnb/batmanlab/ahcmwong/outputs/classification/linear_probe/cxr_clip/ResNet50-M/logs/cxrclip_$JOB_ID.log
+
+# Ensure log/output dirs exist
+mkdir -p /restricted/projectnb/batmanlab/ahcmwong/outputs/classification/linear_probe/cxr_clip/ResNet50-M/logs
+
+# Activate env
+source ~/CXRBench/cxrclip-env/bin/activate
+
+# Run training
+python tasks/classification/linear_probing/MIMIC-CXR/CXR-CLIP/train.py \
+  --config tasks/classification/linear_probing/MIMIC-CXR/CXR-CLIP/config.yaml
