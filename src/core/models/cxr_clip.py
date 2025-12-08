@@ -35,25 +35,25 @@ class CXRCLIPLinearProbe(nn.Module):
             ckpt_path = Path(checkpoint_path)
             if ckpt_path.is_file():
                 state = None
-                load_err = None
-                # Try a few loaders to accommodate different pickle formats.
-                loaders = [
-                    lambda p: torch.load(p, map_location="cpu"),
-                ]
+                errors = []
+                loaders = []
+                loaders.append(("torch.load(default)", lambda p: torch.load(p, map_location="cpu")))
                 if pickle5 is not None:
-                    loaders.append(lambda p: torch.load(p, map_location="cpu", pickle_module=pickle5))
-                loaders.append(lambda p: pickle.load(open(p, "rb")))
+                    loaders.append(("torch.load(pickle5)", lambda p: torch.load(p, map_location="cpu", pickle_module=pickle5)))
+                # Plain pickle as a last resort (often fails on torch checkpoints).
+                loaders.append(("pickle.load", lambda p: pickle.load(open(p, "rb"))))
 
-                for loader in loaders:
+                for name, loader in loaders:
                     try:
                         state = loader(ckpt_path)
+                        print(f"[CXRCLIP] Loaded checkpoint with {name}")
                         break
                     except Exception as e:
-                        load_err = e
+                        errors.append((name, str(e)))
                         continue
 
                 if state is None:
-                    raise RuntimeError(f"Failed to load checkpoint {ckpt_path}: {load_err}")
+                    raise RuntimeError(f"Failed to load checkpoint {ckpt_path}. Errors: {errors}")
 
                 if isinstance(state, dict) and "state_dict" in state:
                     state = state["state_dict"]
