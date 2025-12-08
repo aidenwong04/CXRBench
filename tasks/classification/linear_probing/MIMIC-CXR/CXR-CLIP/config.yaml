@@ -1,7 +1,5 @@
-"""
-Adapted from SubpopBench (https://github.com/YyzHarry/SubpopBench).
-Linear probing config for CXR-CLIP ResNet50-M on MIMIC-CXR (multi-label).
-"""
+# Adapted from SubpopBench (https://github.com/YyzHarry/SubpopBench).
+# Linear probing config for CXR-CLIP ResNet50-M on MIMIC-CXR (multi-label).
 
 model:
   checkpoint_path: /restricted/projectnb/batmanlab/ahcmwong/checkpoints/ResNet50-M/data.pkl
