@@ -17,7 +17,8 @@ data:
     val: /restricted/projectnb/batmanlab/shared/Data/chestXRayDatasets/MIMICCXR/valid.csv
     test: /restricted/projectnb/batmanlab/shared/Data/chestXRayDatasets/MIMICCXR/valid.csv
 
-  image_root: /restricted/projectnb/batmanlab/shared/Data/chestXRayDatasets/MIMICCXR/train # base dir for images
+  # Base dir that prefixes the relative paths in the CSV (paths already include 'train/...').
+  image_root: /restricted/projectnb/batmanlab/shared/Data/chestXRayDatasets/MIMICCXR
   path_column: path # column with relative paths
   label_columns:
     [
