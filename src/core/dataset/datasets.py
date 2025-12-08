@@ -32,7 +32,8 @@ DATASETS = [
     "Living17",
     "Entity13",
     "Entity30",
-    "Nonliving26"
+    "Nonliving26",
+    "MIMICMultilabel"
 ]
 
 
@@ -413,6 +414,80 @@ class BaseImageDataset(SubpopDataset):
                 x = str(reduced_img_path.resolve())
 
         return self.transform_(Image.open(x).convert("RGB"))
+
+
+class MIMICMultilabel(torch.utils.data.Dataset):
+    """MIMIC-CXR multi-label dataset with configurable uncertain-label policy."""
+    N_STEPS = 20001
+    CHECKPOINT_FREQ = 1000
+    N_WORKERS = 16
+    INPUT_SHAPE = (3, 224, 224,)
+    EVAL_SPLITS = ['te']
+    data_type = "images"
+    label_type = "multi"
+
+    def __init__(self, data_path, split, hparams, train_attr='no', subsample_type=None, duplicates=None):
+        metadata_path = hparams.get(
+            'mimic_multilabel_metadata',
+            os.path.join(data_path, "MIMIC-CXR-JPG", "metadata_multilabel.csv")
+        )
+        image_root = hparams.get('image_root', os.path.join(data_path, "MIMIC-CXR-JPG"))
+        path_column = hparams.get('path_column', 'path')
+        split_column = hparams.get('split_column', 'split')
+        split_map = hparams.get('split_map', {'tr': 'train', 'va': 'val', 'te': 'test'})
+        uncertain_policy = hparams.get('uncertain_policy', 'zero')  # zero|one|ignore
+        label_columns = hparams.get('label_columns', None)
+
+        df = pd.read_csv(metadata_path)
+        # Filter split
+        split_value = split_map.get(split, split)
+        df = df[df[split_column] == split_value].copy()
+
+        # Infer label columns if not provided (exclude known non-label fields)
+        if label_columns is None:
+            exclude_cols = {path_column, split_column, 'view'}
+            label_columns = [c for c in df.columns if c not in exclude_cols]
+
+        # Handle uncertain labels (-1)
+        if uncertain_policy == 'zero':
+            df[label_columns] = df[label_columns].replace(-1, 0)
+        elif uncertain_policy == 'one':
+            df[label_columns] = df[label_columns].replace(-1, 1)
+        elif uncertain_policy == 'ignore':
+            df = df[(df[label_columns] != -1).all(axis=1)].copy()
+        else:
+            raise ValueError(f"Unknown uncertain_policy: {uncertain_policy}")
+
+        self.label_columns = label_columns
+        self.num_labels = len(label_columns)
+        self.num_attributes = 1  # dummy attribute
+        self.group_sizes = [len(df)]
+        self.weights_g = [1.0] * len(df)
+        self.weights_y = [1.0] * len(df)
+
+        self.paths = df[path_column].astype(str).tolist()
+        self.labels = df[label_columns].astype(np.float32).values
+        self.image_root = image_root
+
+        self.transform_ = transforms.Compose([
+            transforms.Resize(256),
+            transforms.CenterCrop(224),
+            transforms.ToTensor(),
+            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+        ])
+
+    def __len__(self):
+        return len(self.paths)
+
+    def transform(self, x):
+        return self.transform_(Image.open(x).convert("RGB"))
+
+    def __getitem__(self, idx):
+        path = os.path.join(self.image_root, self.paths[idx])
+        x = self.transform(path)
+        y = torch.tensor(self.labels[idx], dtype=torch.float32)
+        a = torch.tensor(0, dtype=torch.long)  # dummy attribute
+        return idx, x, y, a
 
 
 class NICOpp(BaseImageDataset):

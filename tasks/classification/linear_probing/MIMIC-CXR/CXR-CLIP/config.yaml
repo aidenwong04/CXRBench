@@ -1,0 +1,39 @@
+"""
+Adapted from SubpopBench (https://github.com/YyzHarry/SubpopBench).
+Linear probing config for CXR-CLIP ResNet50-M on MIMIC-CXR (multi-label).
+"""
+
+model:
+  checkpoint_path: /path/to/cxr_clip_resnet50_m.pth  # update on SCC
+  encoder: resnet50
+  freeze_encoder: true
+  image_size: 224
+  mean: [0.485, 0.456, 0.406]        # update to CXR-CLIP stats if they differ
+  std: [0.229, 0.224, 0.225]
+  classifier_dropout: 0.0
+
+data:
+  metadata_csv: /path/to/metadata_multilabel.csv    # update on SCC
+  image_root: /path/to/MIMIC-CXR-JPG                # base dir for images
+  path_column: filename                             # column with relative paths
+  label_columns: []                                 # e.g., ["No_Finding", "Edema", ...]
+  split_column: split                               # column with split ids
+  splits:
+    train: tr
+    val: va
+    test: te
+  num_workers: 8
+
+training:
+  batch_size: 32
+  num_epochs: 10
+  lr: 1e-3
+  weight_decay: 1e-4
+  optimizer: adam
+  use_fp16: true
+
+logging:
+  output_dir: outputs/cxr_clip_linear_probe
+  log_every: 50
+  eval_every: 1          # evaluate every N epochs
+  save_ckpt: true
