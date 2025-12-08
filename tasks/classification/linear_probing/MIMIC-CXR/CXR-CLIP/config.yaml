@@ -17,7 +17,7 @@ data:
     val: /restricted/projectnb/batmanlab/shared/Data/chestXRayDatasets/MIMICCXR/valid.csv
     test: /restricted/projectnb/batmanlab/shared/Data/chestXRayDatasets/MIMICCXR/valid.csv
 
-  image_root: /restricted/projectnb/batmanlab/shared/Data/chestXRayDatasets/MIMICCXR/MIMIC-CXR-JPG # base dir for images
+  image_root: /restricted/projectnb/batmanlab/shared/Data/chestXRayDatasets/MIMICCXR/train # base dir for images
   path_column: path # column with relative paths
   label_columns:
     [

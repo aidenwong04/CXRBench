@@ -170,8 +170,8 @@ def train(cfg):
     criterion = nn.BCEWithLogitsLoss()
     optimizer = optim.Adam(
         filter(lambda p: p.requires_grad, model.parameters()),
-        lr=cfg["training"]["lr"],
-        weight_decay=cfg["training"]["weight_decay"],
+        lr=float(cfg["training"]["lr"]),
+        weight_decay=float(cfg["training"]["weight_decay"]),
     )
 
     scaler = torch.cuda.amp.GradScaler(enabled=cfg["training"].get("use_fp16", False))

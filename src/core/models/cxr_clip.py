@@ -58,7 +58,22 @@ class CXRCLIPLinearProbe(nn.Module):
                 if isinstance(state, dict) and "state_dict" in state:
                     state = state["state_dict"]
                 state = _strip_module_prefix(state)
-                missing, unexpected = backbone.load_state_dict(state, strict=False)
+
+                # Retain only image encoder weights; map CXR-CLIP prefixes to torchvision resnet keys.
+                mapped_state = {}
+                for k, v in state.items():
+                    if k.startswith("image_encoder.resnet."):
+                        new_k = k.replace("image_encoder.resnet.", "")
+                        mapped_state[new_k] = v
+                    elif k.startswith("image_encoder."):
+                        # Skip other image_encoder params we don't use.
+                        continue
+                    elif k.startswith("text_encoder.") or k.startswith("text_projection.") or k.startswith("image_projection."):
+                        continue
+                    else:
+                        mapped_state[k] = v
+
+                missing, unexpected = backbone.load_state_dict(mapped_state, strict=False)
                 if missing:
                     print(f"[CXRCLIP] Missing keys when loading checkpoint: {missing}")
                 if unexpected:
