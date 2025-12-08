@@ -19,7 +19,11 @@ class CXRCLIPLinearProbe(nn.Module):
     """
     def __init__(self, num_classes, checkpoint_path=None, freeze_encoder=True, dropout=0.0):
         super().__init__()
-        backbone = tv.resnet50(weights=None)
+        # Support older torchvision (no weights arg). We load weights via checkpoint anyway.
+        try:
+            backbone = tv.resnet50(weights=None)
+        except TypeError:
+            backbone = tv.resnet50(pretrained=False)
 
         # Load checkpoint if provided; tolerate partial state dicts.
         if checkpoint_path:
