@@ -4,6 +4,11 @@ import torch
 import torch.nn as nn
 import torchvision.models as tv
 from pathlib import Path
+import pickle
+try:
+    import pickle5  # type: ignore
+except ImportError:
+    pickle5 = None
 
 
 def _strip_module_prefix(state_dict):
@@ -29,7 +34,27 @@ class CXRCLIPLinearProbe(nn.Module):
         if checkpoint_path:
             ckpt_path = Path(checkpoint_path)
             if ckpt_path.is_file():
-                state = torch.load(ckpt_path, map_location="cpu")
+                state = None
+                load_err = None
+                # Try a few loaders to accommodate different pickle formats.
+                loaders = [
+                    lambda p: torch.load(p, map_location="cpu"),
+                ]
+                if pickle5 is not None:
+                    loaders.append(lambda p: torch.load(p, map_location="cpu", pickle_module=pickle5))
+                loaders.append(lambda p: pickle.load(open(p, "rb")))
+
+                for loader in loaders:
+                    try:
+                        state = loader(ckpt_path)
+                        break
+                    except Exception as e:
+                        load_err = e
+                        continue
+
+                if state is None:
+                    raise RuntimeError(f"Failed to load checkpoint {ckpt_path}: {load_err}")
+
                 if isinstance(state, dict) and "state_dict" in state:
                     state = state["state_dict"]
                 state = _strip_module_prefix(state)
