@@ -64,15 +64,32 @@ def build_dataloaders(cfg):
     data_cfg = cfg["data"]
     model_cfg = cfg["model"]
 
-    df = pd.read_csv(data_cfg["metadata_csv"])
     transform = build_transforms(model_cfg)
 
-    def subset(split_value):
-        return df[df[data_cfg["split_column"]] == split_value]
+    # Support either a single CSV with split column, or per-split CSVs in a dict.
+    metadata = data_cfg["metadata_csv"]
+    if isinstance(metadata, dict):
+        def load_split(name):
+            if name not in metadata:
+                raise ValueError(f"metadata_csv missing split '{name}'")
+            return pd.read_csv(metadata[name])
+        train_df = load_split("train")
+        val_df = load_split("val")
+        test_df = load_split("test")
+    else:
+        df = pd.read_csv(metadata)
+        split_col = data_cfg.get("split_column")
+        split_map = data_cfg.get("splits", {})
 
-    train_df = subset(data_cfg["splits"]["train"])
-    val_df = subset(data_cfg["splits"]["val"])
-    test_df = subset(data_cfg["splits"]["test"])
+        def subset(split_key):
+            split_value = split_map.get(split_key, split_key)
+            if split_col is None or split_col not in df.columns:
+                raise ValueError("split_column missing; provide per-split metadata_csv or a split column.")
+            return df[df[split_col] == split_value]
+
+        train_df = subset("train")
+        val_df = subset("val")
+        test_df = subset("test")
 
     label_cols = data_cfg["label_columns"]
 

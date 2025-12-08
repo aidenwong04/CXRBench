@@ -4,7 +4,7 @@ Linear probing config for CXR-CLIP ResNet50-M on MIMIC-CXR (multi-label).
 """
 
 model:
-  checkpoint_path: /path/to/cxr_clip_resnet50_m.pth  # update on SCC
+  checkpoint_path: /restricted/projectnb/batmanlab/ahcmwong/checkpoints/ResNet50-M/data.pkl
   encoder: resnet50
   freeze_encoder: true
   image_size: 224
@@ -13,15 +13,17 @@ model:
   classifier_dropout: 0.0
 
 data:
-  metadata_csv: /path/to/metadata_multilabel.csv    # update on SCC
-  image_root: /path/to/MIMIC-CXR-JPG                # base dir for images
-  path_column: filename                             # column with relative paths
-  label_columns: []                                 # e.g., ["No_Finding", "Edema", ...]
-  split_column: split                               # column with split ids
-  splits:
-    train: tr
-    val: va
-    test: te
+  # Per-split metadata CSVs (no need to merge). Reuse val as test here.
+  metadata_csv:
+    train: /restricted/projectnb/batmanlab/shared/Data/chestXRayDatasets/MIMICCXR/train.csv
+    val: /restricted/projectnb/batmanlab/shared/Data/chestXRayDatasets/MIMICCXR/valid.csv
+    test: /restricted/projectnb/batmanlab/shared/Data/chestXRayDatasets/MIMICCXR/valid.csv
+
+  image_root: /restricted/projectnb/batmanlab/shared/Data/chestXRayDatasets/MIMICCXR/MIMIC-CXR-JPG  # base dir for images
+  path_column: path                   # column with relative paths
+  label_columns: ["No Finding", "Enlarged Cardiomediastinum", "Cardiomegaly", "Airspace Opacity", "Lung Lesion", "Edema", "Consolidation", "Pneumonia", "Atelectasis", "Pneumothorax", "Pleural Effusion", "Pleural Other", "Fracture", "Support Devices"]
+  split_column: null                  # not needed with per-split CSVs
+  uncertain_policy: zero              # map -1 -> 0
   num_workers: 8
 
 training:
@@ -33,7 +35,7 @@ training:
   use_fp16: true
 
 logging:
-  output_dir: outputs/cxr_clip_linear_probe
+  output_dir: /restricted/projectnb/batmanlab/ahcmwong/outputs/classification/linear_probe/cxr_clip/ResNet50-M/
   log_every: 50
   eval_every: 1          # evaluate every N epochs
   save_ckpt: true

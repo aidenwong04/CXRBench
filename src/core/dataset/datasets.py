@@ -438,10 +438,16 @@ class MIMICMultilabel(torch.utils.data.Dataset):
         uncertain_policy = hparams.get('uncertain_policy', 'zero')  # zero|one|ignore
         label_columns = hparams.get('label_columns', None)
 
-        df = pd.read_csv(metadata_path)
-        # Filter split
-        split_value = split_map.get(split, split)
-        df = df[df[split_column] == split_value].copy()
+        # Support either a single metadata CSV with split column or a per-split mapping of CSVs.
+        if isinstance(metadata_path, dict):
+            if split not in metadata_path:
+                raise ValueError(f"metadata path for split '{split}' not provided in mimic_multilabel_metadata")
+            df = pd.read_csv(metadata_path[split])
+        else:
+            df = pd.read_csv(metadata_path)
+            if split_column is not None and split_column in df.columns:
+                split_value = split_map.get(split, split)
+                df = df[df[split_column] == split_value].copy()
 
         # Infer label columns if not provided (exclude known non-label fields)
         if label_columns is None:
