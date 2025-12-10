@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -l
 #$ -P batmanlab
 #$ -cwd
 #$ -j y
@@ -6,11 +6,19 @@
 #$ -l h_rt=24:00:00
 #$ -l mem_free=24G
 #$ -l gpus=1
+#$ -pe omp 8
 #$ -o /restricted/projectnb/batmanlab/ahcmwong/outputs/classification/linear_probe/cxr_clip/ResNet50-M/logs
 
-# Activate env
+export OMP_NUM_THREADS=$NSLOTS
+
+module load cuda/12.8
+
+# activate your venv
 source /restricted/projectnb/batmanlab/ahcmwong/CXRBench/cxrclip-env/bin/activate
 
-# Run training
-python /restricted/projectnb/batmanlab/ahcmwong/CXRBench/tasks/classification/linear_probing/MIMIC-CXR/CXR-CLIP/train.py \
-  --config /restricted/projectnb/batmanlab/ahcmwong/CXRBench/tasks/classification/linear_probing/MIMIC-CXR/CXR-CLIP/config.yaml
+# Go to project dir (so relative paths in config work)
+cd /restricted/projectnb/batmanlab/ahcmwong/CXRBench
+
+# 4) Run training
+python tasks/classification/linear_probing/MIMIC-CXR/CXR-CLIP/train.py \
+  --config tasks/classification/linear_probing/MIMIC-CXR/CXR-CLIP/config.yaml
