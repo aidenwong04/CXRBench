@@ -17,19 +17,19 @@ data:
   path_column: path # column with relative paths
   label_columns:
     [
-      "No Finding",
-      "Enlarged Cardiomediastinum",
       "Cardiomegaly",
-      "Airspace Opacity",
-      "Lung Lesion",
-      "Edema",
-      "Consolidation",
-      "Pneumonia",
       "Atelectasis",
-      "Pneumothorax",
+      "Consolidation",
+      "Edema",
+      "Enlarged Cardiomediastinum",
+      "Fracture",
+      "Lung Lesion",
+      "Lung Opacity",
+      "No Finding",
       "Pleural Effusion",
       "Pleural Other",
-      "Fracture",
+      "Pneumonia",
+      "Pneumothorax",
       "Support Devices",
     ]
   split_column: split
