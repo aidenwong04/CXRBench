@@ -11,14 +11,9 @@ model:
   classifier_dropout: 0.0
 
 data:
-  # Per-split metadata CSVs (no need to merge). Reuse val as test here.
-  metadata_csv:
-    train: /restricted/projectnb/batmanlab/shared/Data/chestXRayDatasets/MIMICCXR/train.csv
-    val: /restricted/projectnb/batmanlab/shared/Data/chestXRayDatasets/MIMICCXR/valid.csv
-    test: /restricted/projectnb/batmanlab/shared/Data/chestXRayDatasets/MIMICCXR/valid.csv
-
-  # Base dir that prefixes the relative paths in the CSV (paths already include 'train/...').
-  image_root: /restricted/projectnb/batmanlab/shared/Data/chestXRayDatasets/MIMICCXR
+  metadata_csv: /restricted/projectnb/batmanlab/ahcmwong/CXRBench/mimic-cxr-chexpert_scc.csv
+  # Leave image_root empty if paths in the CSV are absolute. Otherwise set to the common prefix.
+  image_root: ""
   path_column: path # column with relative paths
   label_columns:
     [
@@ -37,7 +32,11 @@ data:
       "Fracture",
       "Support Devices",
     ]
-  split_column: null # not needed with per-split CSVs
+  split_column: split
+  splits:
+    train: train
+    val: val
+    test: test
   uncertain_policy: zero # map -1 -> 0
   num_workers: 8
 
