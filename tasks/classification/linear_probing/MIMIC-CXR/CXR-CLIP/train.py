@@ -85,7 +85,7 @@ def build_dataloaders(cfg):
             split_value = split_map.get(split_key, split_key)
             if split_col is None or split_col not in df.columns:
                 raise ValueError("split_column missing; provide per-split metadata_csv or a split column.")
-            return df[df[split_col] == split_value]
+            return df[df[split_col] == split_value].copy()
 
         train_df = subset("train")
         val_df = subset("val")
@@ -94,10 +94,14 @@ def build_dataloaders(cfg):
     label_cols = data_cfg["label_columns"]
 
     # Clean labels: coerce to numeric, replace NaNs/inf with 0, and clip to [0,1]
-    for dframe in (train_df, val_df, test_df):
-        dframe[label_cols] = dframe[label_cols].apply(pd.to_numeric, errors="coerce")
-        dframe[label_cols] = dframe[label_cols].fillna(0)
-        dframe[label_cols] = dframe[label_cols].clip(lower=0, upper=1)
+    def _clean(dframe):
+        dframe = dframe.copy()
+        dframe.loc[:, label_cols] = dframe[label_cols].apply(pd.to_numeric, errors="coerce")
+        dframe.loc[:, label_cols] = dframe[label_cols].fillna(0)
+        dframe.loc[:, label_cols] = dframe[label_cols].clip(lower=0, upper=1)
+        return dframe
+
+    train_df, val_df, test_df = (_clean(train_df), _clean(val_df), _clean(test_df))
 
     train_ds = MultiLabelImageDataset(train_df, data_cfg["image_root"],
                                       data_cfg["path_column"], label_cols, transform)
