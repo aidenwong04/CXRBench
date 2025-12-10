@@ -93,6 +93,12 @@ def build_dataloaders(cfg):
 
     label_cols = data_cfg["label_columns"]
 
+    # Clean labels: coerce to numeric, replace NaNs/inf with 0, and clip to [0,1]
+    for dframe in (train_df, val_df, test_df):
+        dframe[label_cols] = dframe[label_cols].apply(pd.to_numeric, errors="coerce")
+        dframe[label_cols] = dframe[label_cols].fillna(0)
+        dframe[label_cols] = dframe[label_cols].clip(lower=0, upper=1)
+
     train_ds = MultiLabelImageDataset(train_df, data_cfg["image_root"],
                                       data_cfg["path_column"], label_cols, transform)
     val_ds = MultiLabelImageDataset(val_df, data_cfg["image_root"],
